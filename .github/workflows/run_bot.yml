@@ -1,0 +1,28 @@
+name: Executer le Bot Bluesky
+
+on:
+  schedule:
+    # S'exécute tous les jours à 8h00 UTC (9h ou 10h heure française selon la saison)
+    - cron: '0 8 * * *'
+  workflow_dispatch: # Permet de déclencher le bot manuellement pour tester !
+
+jobs:
+  run-bot:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Récupérer le code
+        uses: actions/checkout@v4
+
+      - name: Installer Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Installer la bibliothèque Bluesky
+        run: pip install atproto
+
+      - name: Lancer le script Python
+        env:
+          BSKY_HANDLE: ${{ secrets.BSKY_HANDLE }}
+          BSKY_PASSWORD: ${{ secrets.BSKY_PASSWORD }}
+        run: python bot.py
