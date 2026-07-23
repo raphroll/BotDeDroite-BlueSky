@@ -8,14 +8,13 @@ with open('donnees.json', 'r', encoding='utf-8') as f:
     donnees = json.load(f)
 
 # 2. Tirer au sort les variables
-    # Probabilité que la 3e obsession soit un nom (issu de obsessions3)
-    PROBA_NOM = 0.3  # ajuste selon ta préférence (0.3 = 30% des posts)
+PROBA_NOM = 0.3  # probabilité que la 3e obsession soit un nom
 
-    if random.random() < PROBA_NOM:
+if random.random() < PROBA_NOM:
     # Cas "nom" : obs1 et obs2 viennent du pool général, obs3 est un nom
     obs1, obs2 = random.sample(donnees["obsessions12"], 2)
     obs3 = random.choice(donnees["obsessions3"])
-    else:
+else:
     # Cas "classique" : les 3 viennent du pool général, sans doublon
     obs1, obs2, obs3 = random.sample(donnees["obsessions12"], 3)
 
