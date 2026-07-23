@@ -1,24 +1,32 @@
 import os
+import json
 import random
 from atproto import Client
 
-# 1. Liste de phrases que le bot peut choisir au hasard
-PHRASES = [
-    "Bonjour ! Ceci est un message automatique.",
-    "Un petit coucou depuis mon script Python !",
-    "La citation du jour : Il fait toujours beau quelque part.",
-    "Ceci est un test de publication automatique sur Bluesky."
-]
+# 1. Charger les données depuis le fichier JSON
+with open('donnees.json', 'r', encoding='utf-8') as f:
+    donnees = json.load(f)
 
-# 2. Récupération des identifiants secrets
+# 2. Tirer au sort les variables
+obs1, obs2 = random.sample(donnees["obsessions12"], 2)
+obs3 = random.choice(donnees["obsessions3"])
+nom = random.choice(donnees["noms"])
+adj = random.choice(donnees["adjectifs"])
+verbe = random.choice(donnees["verbes"])
+comp = random.choice(donnees["complements"])
+
+# 3. Construire le texte avec le saut de ligne
+texte_du_post = f"{obs1}, {obs2}, {obs3}\n{nom} {adj} {verbe} {comp}"
+
+print("Message généré :")
+print(texte_du_post)
+
+# 4. Connexion et publication sur Bluesky
 HANDLE = os.environ.get("BSKY_HANDLE")
 PASSWORD = os.environ.get("BSKY_PASSWORD")
 
-# 3. Connexion à Bluesky et envoi du message
 client = Client()
 client.login(HANDLE, PASSWORD)
+client.send_post(text=texte_du_post)
 
-phrase_choisie = random.choice(PHRASES)
-client.send_post(text=phrase_choisie)
-
-print("Message envoyé avec succès !")
+print("Message publié avec succès !")
