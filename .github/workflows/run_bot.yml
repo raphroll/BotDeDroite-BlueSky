@@ -3,7 +3,7 @@ name: Executer le Bot Bluesky
 on:
   schedule:
     # S'exécute tous les jours à 8h00 UTC (9h ou 10h heure française selon la saison)
-    - cron: '5 6 * * *'
+    - cron: '30 * * * *'
   workflow_dispatch: # Permet de déclencher le bot manuellement pour tester !
 
 jobs:
