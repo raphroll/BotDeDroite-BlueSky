@@ -1,5 +1,5 @@
 {
-  "obsessions12": [
+  "obsessions": [
     "Egalitarisme",
     "Occupations sauvages",
     "Couscous",
@@ -33,7 +33,16 @@
     "Hijab",
     "Hipsters"
   ],
-    "obsessions3": [
+  "obsessions-neo": [
+    "Barbarie végane",
+    "Agressivité féministe",
+    "Aliénation gay",
+    "Anarchie végane",
+    "Bien-pensance bobo",
+    "Brutalité gréviste",
+    "Calamité sans gluten"
+  ],
+  "obsessions-noms": [
     "Omar Sy",
     "Christiane Taubira",
     "Anne Hidalgo",
@@ -48,7 +57,7 @@
     "Greta Thunberg",
     "Guillaume Meurice"
   ],
-  "noms": [
+  "sujets": [
     "Ces fonctionnaires",
     "Ces militants",
     "Ces jeunes",
