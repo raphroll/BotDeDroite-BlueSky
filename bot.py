@@ -8,17 +8,29 @@ with open('donnees.json', 'r', encoding='utf-8') as f:
     donnees = json.load(f)
 
 # 2. Tirer au sort les variables
-PROBA_NOM = 0.3  # probabilité que la 3e obsession soit un nom
+PROBA_NEO = 0.3  # probabilité que la 1ère obsession soit un néologisme
+PROBA_NOM = 0.3   # probabilité que la 3e obsession soit un nom
 
-if random.random() < PROBA_NOM:
-    # Cas "nom" : obs1 et obs2 viennent du pool général, obs3 est un nom
-    obs1, obs2 = random.sample(donnees["obsessions12"], 2)
-    obs3 = random.choice(donnees["obsessions3"])
+pool12 = donnees["obsessions12"]
+
+obs1_est_neo = random.random() < PROBA_NEO
+obs3_est_nom = random.random() < PROBA_NOM
+
+if obs1_est_neo:
+    obs1 = random.choice(donnees["neologismes"])
+    if obs3_est_nom:
+        obs2 = random.choice(pool12)
+        obs3 = random.choice(donnees["obsessions3"])
+    else:
+        obs2, obs3 = random.sample(pool12, 2)
 else:
-    # Cas "classique" : les 3 viennent du pool général, sans doublon
-    obs1, obs2, obs3 = random.sample(donnees["obsessions12"], 3)
+    if obs3_est_nom:
+        obs1, obs2 = random.sample(pool12, 2)
+        obs3 = random.choice(donnees["obsessions3"])
+    else:
+        obs1, obs2, obs3 = random.sample(pool12, 3)
 
-nom = random.choice(donnees["noms"])
+sujet = random.choice(donnees["sujets"])
 adj = random.choice(donnees["adjectifs"])
 verbe = random.choice(donnees["verbes"])
 comp = random.choice(donnees["complements"])
