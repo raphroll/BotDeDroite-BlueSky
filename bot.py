@@ -8,8 +8,9 @@ with open('donnees.json', 'r', encoding='utf-8') as f:
     donnees = json.load(f)
 
 # 2. Tirer au sort les variables
-PROBA_NEO = 0.3  # probabilité que la 1ère obsession soit un néologisme
+PROBA_NEO = 0.3   # probabilité que la 1ère obsession soit un néologisme
 PROBA_NOM = 0.3   # probabilité que la 3e obsession soit un nom
+PROBA_ADJ = 0.75  # l'adjectif apparaît 3 fois sur 4
 
 obs1_est_neo = random.random() < PROBA_NEO
 obs3_est_nom = random.random() < PROBA_NOM
@@ -34,7 +35,10 @@ verbe = random.choice(donnees["verbes"])
 comp = random.choice(donnees["complements"])
 
 # 3. Construire le texte avec le saut de ligne
-texte_du_post = f"{obs1}, {obs2}, {obs3}\n{sujet} {adj} {verbe} {comp}"
+if random.random() < PROBA_ADJ:
+    texte_du_post = f"{obs1}, {obs2}, {obs3}\n{sujet} {adj} {verbe} {comp}"
+else:
+    texte_du_post = f"{obs1}, {obs2}, {obs3}\n{sujet} {verbe} {comp}"
 
 print("Message généré :")
 print(texte_du_post)
