@@ -7,38 +7,75 @@ from atproto import Client
 with open('donnees.json', 'r', encoding='utf-8') as f:
     donnees = json.load(f)
 
-# 2. Tirer au sort les variables
-PROBA_NEO = 0.3   # probabilité que la 1ère obsession soit un néologisme
-PROBA_NOM = 0.3   # probabilité que la 3e obsession soit un nom
-PROBA_ADJ = 0.75  # l'adjectif apparaît 3 fois sur 4
+# 2. Probabilités de tirage (regroupées en haut, faciles à ajuster)
+PROBA_OBS_COMPO = 0.3         # 1ère obsession composée originale
+PROBA_OBS_NOM = 0.3         # 3e obsession = nom de personne
+PROBA_SUJET_NEO = 0.25  # le sujet vient de "sujets-neo" plutôt que "sujets"
+PROBA_ADJ = 0.8        # (uniquement si sujet normal) l'adjectif est présent
 
-obs1_est_neo = random.random() < PROBA_NEO
-obs3_est_nom = random.random() < PROBA_NOM
 
-if obs1_est_neo:
-    obs1 = random.choice(donnees["obsessions-neo"])
-    if obs3_est_nom:
-        obs2 = random.choice(donnees["obsessions"])
-        obs3 = random.choice(donnees["obsessions-noms"])
+def tirer_obsessions(donnees):
+    """Tire obs1, obs2, obs3 selon les règles néologisme / nom."""
+    obs1_est_compo = random.random() < PROBA_OBS_COMPO
+    obs3_est_nom = random.random() < PROBA_OBS_NOM
+
+    if obs1_est_compo:
+        obs1 = random.choice(donnees["obsessions-neo"])
+        if obs3_est_nom:
+            obs2 = random.choice(donnees["obsessions"])
+            obs3 = random.choice(donnees["obsessions-noms"])
+        else:
+            obs2, obs3 = random.sample(donnees["obsessions"], 2)
     else:
-        obs2, obs3 = random.sample(donnees["obsessions"], 2)
-else:
-    if obs3_est_nom:
-        obs1, obs2 = random.sample(donnees["obsessions"], 2)
-        obs3 = random.choice(donnees["obsessions-noms"])
+        if obs3_est_nom:
+            obs1, obs2 = random.sample(donnees["obsessions"], 2)
+            obs3 = random.choice(donnees["obsessions-noms"])
+        else:
+            obs1, obs2, obs3 = random.sample(donnees["obsessions"], 3)
+
+    return obs1, obs2, obs3
+
+
+def construire_deuxieme_ligne(donnees):
+    """
+    Construit la 2e ligne de la phrase ("{sujet} ...").
+    Deux grandes familles de résultat :
+    - sujet "néo" (mot inventé) -> phrase courte, 2 variantes possibles
+    - sujet "normal" -> phrase classique, avec adjectif optionnel
+    """
+    sujet_est_neo = random.random() < PROBA_SUJET_NEO
+
+    if sujet_est_neo:
+        sujet = random.choice(donnees["sujets-neo"])
+        verbe = random.choice(donnees["verbes"])
+        comp = random.choice(donnees["complements"])
+        adj = random.choice(donnees["adjectifs"])
+
+        # Deux scénarios possibles à 50/50 pour varier la structure courte
+        if random.random() < 0.5:
+            return f"{sujet} {verbe} {comp}"
+        else:
+            return f"{sujet} {adj}"
+
     else:
-        obs1, obs2, obs3 = random.sample(donnees["obsessions"], 3)
+        sujet = random.choice(donnees["sujets"])
+        verbe = random.choice(donnees["verbes"])
+        comp = random.choice(donnees["complements"])
+        adj = random.choice(donnees["adjectifs"])
 
-sujet = random.choice(donnees["sujets"])
-adj = random.choice(donnees["adjectifs"])
-verbe = random.choice(donnees["verbes"])
-comp = random.choice(donnees["complements"])
+        # L'adjectif est optionnel, uniquement dans ce cas "normal"
+        if random.random() < PROBA_ADJ:
+            return f"{sujet} {adj} {verbe} {comp}"
+        else:
+            return f"{sujet} {verbe} {comp}"
 
-# 3. Construire le texte avec le saut de ligne
-if random.random() < PROBA_ADJ:
-    texte_du_post = f"{obs1}, {obs2}, {obs3}\n{sujet} {adj} {verbe} {comp}"
-else:
-    texte_du_post = f"{obs1}, {obs2}, {obs3}\n{sujet} {verbe} {comp}"
+
+# 3. Construction du texte final
+obs1, obs2, obs3 = tirer_obsessions(donnees)
+premiere_ligne = f"{obs1}, {obs2}, {obs3}"
+deuxieme_ligne = construire_deuxieme_ligne(donnees)
+
+texte_du_post = f"{premiere_ligne}\n{deuxieme_ligne}"
 
 print("Message généré :")
 print(texte_du_post)
