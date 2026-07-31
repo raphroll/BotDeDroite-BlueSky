@@ -9,19 +9,19 @@ with open('donnees.json', 'r', encoding='utf-8') as f:
     donnees = json.load(f)
 
 # 2. Probabilités de tirage
-PROBA_NEO = 0.3
-PROBA_NOM = 0.3
+PROBA_OBS_COMPO = 0.3
+PROBA_OBS_NOM = 0.3
 PROBA_SUJET_NEO = 0.25
 PROBA_ADJ = 0.75
 
 
 def tirer_obsessions(donnees):
-    """Tire obs1, obs2, obs3 selon les règles néologisme / nom."""
-    obs1_est_neo = random.random() < PROBA_NEO
-    obs3_est_nom = random.random() < PROBA_NOM
+    """Tire obs1, obs2, obs3 selon les règles composé / nom."""
+    obs1_est_compo = random.random() < PROBA_OBS_COMPO
+    obs3_est_nom = random.random() < PROBA_OBS_NOM
 
-    if obs1_est_neo:
-        obs1 = random.choice(donnees["obsessions-neo"])
+    if obs1_est_compo:
+        obs1 = random.choice(donnees["obsessions-compo"])
         if obs3_est_nom:
             obs2 = random.choice(donnees["obsessions"])
             obs3 = random.choice(donnees["obsessions-noms"])
