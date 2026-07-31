@@ -95,6 +95,7 @@ def generer_image(premiere_ligne, deuxieme_ligne):
 
     x_gauche = marge_gauche
     largeur_utile = largeur - marge_gauche - marge_droite
+    largeur_utile_premiere = largeur_utile * 0.7  # 70% de la largeur normale, pour forcer le retour à la ligne
     y = marge_haut
 
     calque_texte = Image.new("RGBA", image.size, (255, 255, 255, 0))
@@ -112,7 +113,7 @@ def generer_image(premiere_ligne, deuxieme_ligne):
         draw.text((x + decalage_ombre[0], y + decalage_ombre[1]), texte, font=police, fill=couleur_ombre)
         draw.text((x, y), texte, font=police, fill=couleur)
 
-    lignes_premiere = decouper_selon_largeur(draw, premiere_ligne, police_premiere, largeur_utile)
+    lignes_premiere = decouper_selon_largeur(draw, premiere_ligne, police_premiere, largeur_utile_premiere)
     for ligne in lignes_premiere:
         dessiner_avec_ombre(x_gauche, y, ligne, police_premiere, couleur_blanc)
         y += 26 + 12
