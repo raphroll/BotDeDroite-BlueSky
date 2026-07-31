@@ -100,7 +100,7 @@ def generer_image(premiere_ligne, deuxieme_ligne):
     calque_texte = Image.new("RGBA", image.size, (255, 255, 255, 0))
     draw = ImageDraw.Draw(calque_texte)
 
-    police_premiere = ImageFont.truetype("Anton-Regular.ttf", 18)
+    police_premiere = ImageFont.truetype("Oswald-Regular.ttf", 18)
     police_deuxieme = ImageFont.truetype("Anton-Regular.ttf", 36)
 
     couleur_blanc = (255, 255, 255, 255)
