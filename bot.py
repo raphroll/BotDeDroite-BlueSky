@@ -116,7 +116,7 @@ def generer_image(premiere_ligne, deuxieme_ligne):
     lignes_premiere = decouper_selon_largeur(draw, premiere_ligne, police_premiere, largeur_utile_premiere)
     for ligne in lignes_premiere:
         dessiner_avec_ombre(x_gauche, y, ligne, police_premiere, couleur_blanc)
-        y += 26 + 12
+        y += 18 + 4
 
     y += 20
 
@@ -125,7 +125,7 @@ def generer_image(premiere_ligne, deuxieme_ligne):
         largeur_ligne = draw.textlength(ligne, font=police_deuxieme)
         x_centre = x_gauche + (largeur_utile - largeur_ligne) / 2
         dessiner_avec_ombre(x_centre, y, ligne, police_deuxieme, couleur_jaune)
-        y += 34 + 14
+        y += 36 + 14
 
     resultat = Image.alpha_composite(image, calque_texte).convert("RGB")
     resultat.save("post_genere.jpg", quality=95)
