@@ -95,14 +95,14 @@ def generer_image(premiere_ligne, deuxieme_ligne):
 
     x_gauche = marge_gauche
     largeur_utile = largeur - marge_gauche - marge_droite
-    largeur_utile_premiere = largeur_utile * 0.7  # 70% de la largeur normale, pour forcer le retour à la ligne
+    largeur_utile_premiere = largeur_utile * 0.6  # 70% de la largeur normale, pour forcer le retour à la ligne
     y = marge_haut
 
     calque_texte = Image.new("RGBA", image.size, (255, 255, 255, 0))
     draw = ImageDraw.Draw(calque_texte)
 
-    police_premiere = ImageFont.truetype("Oswald-Regular.ttf", 18)
-    police_deuxieme = ImageFont.truetype("Anton-Regular.ttf", 36)
+    police_premiere = ImageFont.truetype("Oswald-Regular.ttf", 20)
+    police_deuxieme = ImageFont.truetype("Anton-Regular.ttf", 38)
 
     couleur_blanc = (255, 255, 255, 255)
     couleur_jaune = (255, 210, 0, 255)
@@ -116,7 +116,7 @@ def generer_image(premiere_ligne, deuxieme_ligne):
     lignes_premiere = decouper_selon_largeur(draw, premiere_ligne, police_premiere, largeur_utile_premiere)
     for ligne in lignes_premiere:
         dessiner_avec_ombre(x_gauche, y, ligne, police_premiere, couleur_blanc)
-        y += 18 + 4
+        y += 20 + 4
 
     y += 20
 
@@ -125,7 +125,7 @@ def generer_image(premiere_ligne, deuxieme_ligne):
         largeur_ligne = draw.textlength(ligne, font=police_deuxieme)
         x_centre = x_gauche + (largeur_utile - largeur_ligne) / 2
         dessiner_avec_ombre(x_centre, y, ligne, police_deuxieme, couleur_jaune)
-        y += 36 + 14
+        y += 38 + 14
 
     resultat = Image.alpha_composite(image, calque_texte).convert("RGB")
     resultat.save("post_genere.jpg", quality=95)
