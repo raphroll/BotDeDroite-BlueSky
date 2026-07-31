@@ -141,16 +141,23 @@ texte_du_post = f"{premiere_ligne}\n{deuxieme_ligne}"
 print("Message généré :")
 print(texte_du_post)
 
-# 4. Connexion et publication du TEXTE sur Bluesky (comportement inchangé)
+# 4. Génération de l'image
+chemin_image = generer_image(premiere_ligne, deuxieme_ligne)
+
+# 5. Connexion et publication sur Bluesky (texte + image ensemble)
 HANDLE = os.environ.get("BSKY_HANDLE")
 PASSWORD = os.environ.get("BSKY_PASSWORD")
 
 client = Client()
 client.login(HANDLE, PASSWORD)
-client.send_post(text=texte_du_post)
 
-print("Message texte publié avec succès !")
+with open(chemin_image, "rb") as f:
+    donnees_image = f.read()
 
-# 5. Génération de l'image EN PLUS, à titre de test (pas publiée pour l'instant)
-generer_image(premiere_ligne, deuxieme_ligne)
-print("Image de test générée : post_genere.jpg (à consulter dans les artifacts du run)")
+client.send_image(
+    text=texte_du_post,
+    image=donnees_image,
+    image_alt=texte_du_post
+)
+
+print("Post (texte + image) publié avec succès !")
