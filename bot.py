@@ -116,9 +116,9 @@ def generer_image(premiere_ligne, deuxieme_ligne):
     lignes_premiere = decouper_selon_largeur(draw, premiere_ligne, police_premiere, largeur_utile_premiere)
     for ligne in lignes_premiere:
         dessiner_avec_ombre(x_gauche, y, ligne, police_premiere, couleur_blanc)
-        y += 20 + 4
+        y += 20 + 8
 
-    y += 20
+    y += 24
 
     lignes_deuxieme = decouper_selon_largeur(draw, deuxieme_ligne, police_deuxieme, largeur_utile)
     for ligne in lignes_deuxieme:
