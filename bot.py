@@ -125,7 +125,7 @@ def generer_image(premiere_ligne, deuxieme_ligne):
         largeur_ligne = draw.textlength(ligne, font=police_deuxieme)
         x_centre = x_gauche + (largeur_utile - largeur_ligne) / 2
         dessiner_avec_ombre(x_centre, y, ligne, police_deuxieme, couleur_jaune)
-        y += 38 + 14
+        y += 38 + 12
 
     resultat = Image.alpha_composite(image, calque_texte).convert("RGB")
     resultat.save("post_genere.jpg", quality=95)
