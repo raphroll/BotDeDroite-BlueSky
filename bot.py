@@ -4,16 +4,67 @@ import random
 from atproto import Client
 from PIL import Image, ImageDraw, ImageFont
 
-# 1. Charger les données depuis le fichier JSON
+# ============================================================
+# 1. CHARGEMENT DES DONNÉES
+# ============================================================
 with open('donnees.json', 'r', encoding='utf-8') as f:
     donnees = json.load(f)
 
-# 2. Probabilités de tirage
+
+# ============================================================
+# 2. PROBABILITÉS DE TIRAGE DU TEXTE
+# ============================================================
 PROBA_OBS_COMPO = 0.3
 PROBA_OBS_NOM = 0.3
 PROBA_SUJET_NEO = 0.25
 PROBA_ADJ = 0.75
 
+
+# ============================================================
+# 3. PARAMÈTRES VISUELS DE L'IMAGE
+# Tout ce qui concerne l'apparence du texte incrusté est ici.
+# Modifie librement ces valeurs sans toucher au reste du code.
+# ============================================================
+
+# --- Image de fond ---
+FICHIER_IMAGE_FOND = "une-vierge2.png"
+
+# --- Marges (zone de texte autorisée sur l'image) ---
+MARGE_GAUCHE = 250
+MARGE_DROITE = 250
+MARGE_HAUT = 360
+MARGE_BAS = 130
+
+# --- Phrase 1 (les 3 obsessions), en haut, alignée à gauche ---
+FICHIER_POLICE_PHRASE1 = "Oswald-Regular.ttf"
+COULEUR_PHRASE1 = (255, 255, 255, 255)  # blanc
+TAILLE_PHRASE1 = 38
+INTERLIGNE_PHRASE1 = 15
+RATIO_LARGEUR_PHRASE1 = 0.66  # réduit la largeur dispo pour forcer le retour à la ligne plus tôt
+
+# --- Phrase 2 (sujet + verbe + complément), centrée ---
+FICHIER_POLICE_PHRASE2 = "Anton-Regular.ttf"
+COULEUR_PHRASE2 = (255, 210, 0, 255)  # jaune
+INTERLIGNE_PHRASE2 = 23
+
+# Taille de la phrase 2 : adaptative selon la longueur du texte
+# (plus le texte est long, plus la police est petite, dans les limites ci-dessous)
+TAILLE_PHRASE2_BASE = 98        # valeur de départ avant réduction
+TAILLE_PHRASE2_MIN = 60
+TAILLE_PHRASE2_MAX = 92
+TAILLE_PHRASE2_COEF_REDUCTION = 0.5  # points perdus par caractère
+
+# --- Espacement entre les deux blocs de texte ---
+ESPACE_ENTRE_PHRASES = 46
+
+# --- Ombrage (appliqué aux deux phrases) ---
+COULEUR_OMBRE = (0, 0, 0, 160)
+DECALAGE_OMBRE = (4, 4)
+
+
+# ============================================================
+# 4. FONCTIONS DE GÉNÉRATION DU TEXTE
+# ============================================================
 
 def tirer_obsessions(donnees):
     """Tire obs1, obs2, obs3 selon les règles composé / nom."""
@@ -64,6 +115,10 @@ def construire_deuxieme_ligne(donnees):
             return f"{sujet} {verbe} {comp}"
 
 
+# ============================================================
+# 5. FONCTIONS DE GÉNÉRATION DE L'IMAGE
+# ============================================================
+
 def decouper_selon_largeur(draw, texte, police, largeur_max):
     """Découpe un texte en lignes qui tiennent dans largeur_max pixels."""
     mots = texte.split(" ")
@@ -81,65 +136,60 @@ def decouper_selon_largeur(draw, texte, police, largeur_max):
         lignes.append(ligne_actuelle)
     return lignes
 
-def calculer_taille_police_deuxieme(texte):
+
+def calculer_taille_police_phrase2(texte):
     """Réduit la taille de police si le texte est long, l'augmente s'il est court.
-    Formule linéaire simple, bornée entre 55 (mini) et 80 (maxi)."""
-    taille = 98 - len(texte) * 0.5
-    return max(60, min(92, taille))
+    Formule linéaire simple, bornée entre TAILLE_PHRASE2_MIN et TAILLE_PHRASE2_MAX."""
+    taille = TAILLE_PHRASE2_BASE - len(texte) * TAILLE_PHRASE2_COEF_REDUCTION
+    return max(TAILLE_PHRASE2_MIN, min(TAILLE_PHRASE2_MAX, taille))
+
 
 def generer_image(premiere_ligne, deuxieme_ligne):
     """Génère l'image façon 'couverture d'hebdo' avec le texte incrusté.
-    Cette fonction ne publie rien : elle sauvegarde juste un fichier .jpg
-    en local, que le workflow GitHub Actions rendra téléchargeable."""
-    image = Image.open("une-vierge2.png").convert("RGBA")
+    Cette fonction ne publie rien : elle sauvegarde juste un fichier .jpg en local."""
+    image = Image.open(FICHIER_IMAGE_FOND).convert("RGBA")
     largeur, hauteur = image.size
 
-    marge_gauche = 250
-    marge_droite = 250
-    marge_haut = 360
-    marge_bas = 130
-
-    x_gauche = marge_gauche
-    largeur_utile = largeur - marge_gauche - marge_droite
-    largeur_utile_premiere = largeur_utile * 0.66  # % de la largeur normale, pour forcer le retour à la ligne
-    y = marge_haut
+    x_gauche = MARGE_GAUCHE
+    largeur_utile = largeur - MARGE_GAUCHE - MARGE_DROITE
+    largeur_utile_premiere = largeur_utile * RATIO_LARGEUR_PHRASE1
+    y = MARGE_HAUT
 
     calque_texte = Image.new("RGBA", image.size, (255, 255, 255, 0))
     draw = ImageDraw.Draw(calque_texte)
 
-    police_premiere = ImageFont.truetype("Oswald-Regular.ttf", 38)
-    taille_police_deuxieme = calculer_taille_police_deuxieme(deuxieme_ligne)
-    police_deuxieme = ImageFont.truetype("Anton-Regular.ttf", taille_police_deuxieme)
-
-    couleur_blanc = (255, 255, 255, 255)
-    couleur_jaune = (255, 210, 0, 255)
-    couleur_ombre = (0, 0, 0, 160)
-    decalage_ombre = (4, 4)
+    police_premiere = ImageFont.truetype(FICHIER_POLICE_PHRASE1, TAILLE_PHRASE1)
+    taille_police_deuxieme = calculer_taille_police_phrase2(deuxieme_ligne)
+    police_deuxieme = ImageFont.truetype(FICHIER_POLICE_PHRASE2, taille_police_deuxieme)
 
     def dessiner_avec_ombre(x, y, texte, police, couleur):
-        draw.text((x + decalage_ombre[0], y + decalage_ombre[1]), texte, font=police, fill=couleur_ombre)
+        draw.text((x + DECALAGE_OMBRE[0], y + DECALAGE_OMBRE[1]), texte, font=police, fill=COULEUR_OMBRE)
         draw.text((x, y), texte, font=police, fill=couleur)
 
+    # --- Phrase 1 : alignée à gauche ---
     lignes_premiere = decouper_selon_largeur(draw, premiere_ligne, police_premiere, largeur_utile_premiere)
     for ligne in lignes_premiere:
-        dessiner_avec_ombre(x_gauche, y, ligne, police_premiere, couleur_blanc)
-        y += 38 + 15
+        dessiner_avec_ombre(x_gauche, y, ligne, police_premiere, COULEUR_PHRASE1)
+        y += TAILLE_PHRASE1 + INTERLIGNE_PHRASE1
 
-    y += 46
+    y += ESPACE_ENTRE_PHRASES
 
+    # --- Phrase 2 : centrée ---
     lignes_deuxieme = decouper_selon_largeur(draw, deuxieme_ligne, police_deuxieme, largeur_utile)
     for ligne in lignes_deuxieme:
         largeur_ligne = draw.textlength(ligne, font=police_deuxieme)
         x_centre = x_gauche + (largeur_utile - largeur_ligne) / 2
-        dessiner_avec_ombre(x_centre, y, ligne, police_deuxieme, couleur_jaune)
-        y += taille_police_deuxieme + 23
+        dessiner_avec_ombre(x_centre, y, ligne, police_deuxieme, COULEUR_PHRASE2)
+        y += taille_police_deuxieme + INTERLIGNE_PHRASE2
 
     resultat = Image.alpha_composite(image, calque_texte).convert("RGB")
     resultat.save("post_genere.jpg", quality=95)
     return "post_genere.jpg"
 
 
-# 3. Construction du texte
+# ============================================================
+# 6. CONSTRUCTION DU TEXTE DU POST
+# ============================================================
 obs1, obs2, obs3 = tirer_obsessions(donnees)
 premiere_ligne = f"{obs1}, {obs2}, {obs3}"
 deuxieme_ligne = construire_deuxieme_ligne(donnees)
@@ -148,10 +198,16 @@ texte_du_post = f"{premiere_ligne}\n{deuxieme_ligne}"
 print("Message généré :")
 print(texte_du_post)
 
-# 4. Génération de l'image
+
+# ============================================================
+# 7. GÉNÉRATION DE L'IMAGE
+# ============================================================
 chemin_image = generer_image(premiere_ligne, deuxieme_ligne)
 
-# 5. Connexion et publication sur Bluesky (texte + image ensemble)
+
+# ============================================================
+# 8. PUBLICATION SUR BLUESKY (texte + image ensemble)
+# ============================================================
 HANDLE = os.environ.get("BSKY_HANDLE")
 PASSWORD = os.environ.get("BSKY_PASSWORD")
 
