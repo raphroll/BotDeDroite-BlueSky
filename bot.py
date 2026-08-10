@@ -81,6 +81,11 @@ def decouper_selon_largeur(draw, texte, police, largeur_max):
         lignes.append(ligne_actuelle)
     return lignes
 
+def calculer_taille_police_deuxieme(texte):
+    """Réduit la taille de police si le texte est long, l'augmente s'il est court.
+    Formule linéaire simple, bornée entre 55 (mini) et 80 (maxi)."""
+    taille = 90 - len(texte)
+    return max(55, min(80, taille))
 
 def generer_image(premiere_ligne, deuxieme_ligne):
     """Génère l'image façon 'couverture d'hebdo' avec le texte incrusté.
@@ -103,7 +108,8 @@ def generer_image(premiere_ligne, deuxieme_ligne):
     draw = ImageDraw.Draw(calque_texte)
 
     police_premiere = ImageFont.truetype("Oswald-Regular.ttf", 38)
-    police_deuxieme = ImageFont.truetype("Anton-Regular.ttf", 72)
+    taille_police_deuxieme = calculer_taille_police_deuxieme(deuxieme_ligne)
+    police_deuxieme = ImageFont.truetype("Anton-Regular.ttf", taille_police_deuxieme)
 
     couleur_blanc = (255, 255, 255, 255)
     couleur_jaune = (255, 210, 0, 255)
@@ -126,7 +132,7 @@ def generer_image(premiere_ligne, deuxieme_ligne):
         largeur_ligne = draw.textlength(ligne, font=police_deuxieme)
         x_centre = x_gauche + (largeur_utile - largeur_ligne) / 2
         dessiner_avec_ombre(x_centre, y, ligne, police_deuxieme, couleur_jaune)
-        y += 72 + 23
+        y += taille_police_deuxieme + 23
 
     resultat = Image.alpha_composite(image, calque_texte).convert("RGB")
     resultat.save("post_genere.jpg", quality=95)
