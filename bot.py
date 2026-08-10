@@ -86,12 +86,13 @@ def generer_image(premiere_ligne, deuxieme_ligne):
     """Génère l'image façon 'couverture d'hebdo' avec le texte incrusté.
     Cette fonction ne publie rien : elle sauvegarde juste un fichier .jpg
     en local, que le workflow GitHub Actions rendra téléchargeable."""
-    image = Image.open("une-vierge.png").convert("RGBA")
+    image = Image.open("une-vierge2.png").convert("RGBA")
     largeur, hauteur = image.size
 
-    marge_gauche = 70
-    marge_droite = 70
-    marge_haut = 130
+    marge_gauche = 250
+    marge_droite = 250
+    marge_haut = 360
+    marge_bas = 130
 
     x_gauche = marge_gauche
     largeur_utile = largeur - marge_gauche - marge_droite
@@ -101,13 +102,13 @@ def generer_image(premiere_ligne, deuxieme_ligne):
     calque_texte = Image.new("RGBA", image.size, (255, 255, 255, 0))
     draw = ImageDraw.Draw(calque_texte)
 
-    police_premiere = ImageFont.truetype("Oswald-Regular.ttf", 20)
-    police_deuxieme = ImageFont.truetype("Anton-Regular.ttf", 38)
+    police_premiere = ImageFont.truetype("Oswald-Regular.ttf", 38)
+    police_deuxieme = ImageFont.truetype("Anton-Regular.ttf", 72)
 
     couleur_blanc = (255, 255, 255, 255)
     couleur_jaune = (255, 210, 0, 255)
     couleur_ombre = (0, 0, 0, 160)
-    decalage_ombre = (2, 2)
+    decalage_ombre = (4, 4)
 
     def dessiner_avec_ombre(x, y, texte, police, couleur):
         draw.text((x + decalage_ombre[0], y + decalage_ombre[1]), texte, font=police, fill=couleur_ombre)
@@ -116,16 +117,16 @@ def generer_image(premiere_ligne, deuxieme_ligne):
     lignes_premiere = decouper_selon_largeur(draw, premiere_ligne, police_premiere, largeur_utile_premiere)
     for ligne in lignes_premiere:
         dessiner_avec_ombre(x_gauche, y, ligne, police_premiere, couleur_blanc)
-        y += 20 + 8
+        y += 38 + 15
 
-    y += 24
+    y += 46
 
     lignes_deuxieme = decouper_selon_largeur(draw, deuxieme_ligne, police_deuxieme, largeur_utile)
     for ligne in lignes_deuxieme:
         largeur_ligne = draw.textlength(ligne, font=police_deuxieme)
         x_centre = x_gauche + (largeur_utile - largeur_ligne) / 2
         dessiner_avec_ombre(x_centre, y, ligne, police_deuxieme, couleur_jaune)
-        y += 38 + 12
+        y += 72 + 23
 
     resultat = Image.alpha_composite(image, calque_texte).convert("RGB")
     resultat.save("post_genere.jpg", quality=95)
