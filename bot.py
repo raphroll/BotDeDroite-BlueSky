@@ -101,7 +101,7 @@ def generer_image(premiere_ligne, deuxieme_ligne):
 
     x_gauche = marge_gauche
     largeur_utile = largeur - marge_gauche - marge_droite
-    largeur_utile_premiere = largeur_utile * 0.75  # % de la largeur normale, pour forcer le retour à la ligne
+    largeur_utile_premiere = largeur_utile * 0.66  # % de la largeur normale, pour forcer le retour à la ligne
     y = marge_haut
 
     calque_texte = Image.new("RGBA", image.size, (255, 255, 255, 0))
