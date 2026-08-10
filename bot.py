@@ -84,8 +84,8 @@ def decouper_selon_largeur(draw, texte, police, largeur_max):
 def calculer_taille_police_deuxieme(texte):
     """Réduit la taille de police si le texte est long, l'augmente s'il est court.
     Formule linéaire simple, bornée entre 55 (mini) et 80 (maxi)."""
-    taille = 96 - len(texte) * 0.5
-    return max(55, min(84, taille))
+    taille = 100 - len(texte) * 0.5
+    return max(60, min(90, taille))
 
 def generer_image(premiere_ligne, deuxieme_ligne):
     """Génère l'image façon 'couverture d'hebdo' avec le texte incrusté.
