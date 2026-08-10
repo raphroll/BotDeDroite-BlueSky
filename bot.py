@@ -22,8 +22,6 @@ PROBA_ADJ = 0.75
 
 # ============================================================
 # 3. PARAMÈTRES VISUELS DE L'IMAGE
-# Tout ce qui concerne l'apparence du texte incrusté est ici.
-# Modifie librement ces valeurs sans toucher au reste du code.
 # ============================================================
 
 # --- Image de fond ---
@@ -46,9 +44,6 @@ RATIO_LARGEUR_PHRASE1 = 0.66  # réduit la largeur dispo pour forcer le retour �
 FICHIER_POLICE_PHRASE2 = "Anton-Regular.ttf"
 COULEUR_PHRASE2 = (255, 210, 0, 255)  # jaune
 INTERLIGNE_PHRASE2 = 23
-
-# Taille de la phrase 2 : adaptative selon la longueur du texte
-# (plus le texte est long, plus la police est petite, dans les limites ci-dessous)
 TAILLE_PHRASE2_BASE = 98        # valeur de départ avant réduction
 TAILLE_PHRASE2_MIN = 60
 TAILLE_PHRASE2_MAX = 92
