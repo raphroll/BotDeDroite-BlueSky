@@ -27,7 +27,7 @@ PROBA_ADJ = 0.75
 # --- Image de fond ---
 FICHIER_IMAGE_FOND = "une-vierge2.png"
 
-# --- Marges (zone de texte autorisée sur l'image) ---
+# --- Marges du texte (zone autorisée sur l'image) ---
 MARGE_GAUCHE = 250
 MARGE_DROITE = 250
 MARGE_HAUT = 360
@@ -38,23 +38,37 @@ FICHIER_POLICE_PHRASE1 = "Oswald-Regular.ttf"
 COULEUR_PHRASE1 = (255, 255, 255, 255)  # blanc
 TAILLE_PHRASE1 = 38
 INTERLIGNE_PHRASE1 = 15
-RATIO_LARGEUR_PHRASE1 = 0.66  # réduit la largeur dispo pour forcer le retour à la ligne plus tôt
+RATIO_LARGEUR_PHRASE1 = 0.66
 
 # --- Phrase 2 (sujet + verbe + complément), centrée ---
 FICHIER_POLICE_PHRASE2 = "Anton-Regular.ttf"
 COULEUR_PHRASE2 = (255, 210, 0, 255)  # jaune
 INTERLIGNE_PHRASE2 = 23
-TAILLE_PHRASE2_BASE = 110        # valeur de départ avant réduction
+TAILLE_PHRASE2_BASE = 98
 TAILLE_PHRASE2_MIN = 60
 TAILLE_PHRASE2_MAX = 92
-TAILLE_PHRASE2_COEF_REDUCTION = 0.5  # points perdus par caractère
+TAILLE_PHRASE2_COEF_REDUCTION = 0.5
 
 # --- Espacement entre les deux blocs de texte ---
 ESPACE_ENTRE_PHRASES = 46
 
-# --- Ombrage (appliqué aux deux phrases) ---
+# --- Ombrage (texte) ---
 COULEUR_OMBRE = (0, 0, 0, 160)
 DECALAGE_OMBRE = (4, 4)
+
+# --- Géométrie de l'encadré noir (mesurée sur l'image de fond) ---
+X_GAUCHE_ENCADRE = 200
+LARGEUR_ENCADRE = 806
+Y_BAS_ENCADRE = 1131
+
+# --- Illustrations dans l'encadré ---
+DOSSIER_IMAGES = "images"
+HAUTEUR_ZONE_BASSE = 500  # zone en bas de l'encadré réservée aux illustrations
+ESPACEMENT_H_PREMIERE_MIN = 0
+ESPACEMENT_H_PREMIERE_MAX = 60
+ESPACEMENT_H_MIN = -20
+ESPACEMENT_H_MAX = 100
+SUFFIXE_SANS_ESPACE_VERTICAL = "-en-bas"
 
 
 # ============================================================
@@ -111,7 +125,93 @@ def construire_deuxieme_ligne(donnees):
 
 
 # ============================================================
-# 5. FONCTIONS DE GÉNÉRATION DE L'IMAGE
+# 5. FONCTIONS D'ILLUSTRATION (images dans l'encadré)
+# ============================================================
+
+def lister_images_disponibles():
+    """Liste les images PNG du dossier images/, avec leurs dimensions réelles."""
+    if not os.path.isdir(DOSSIER_IMAGES):
+        return []
+
+    images_disponibles = []
+    for nom_fichier in os.listdir(DOSSIER_IMAGES):
+        if not nom_fichier.lower().endswith(".png"):
+            continue
+        chemin = os.path.join(DOSSIER_IMAGES, nom_fichier)
+        largeur, hauteur = Image.open(chemin).size
+        images_disponibles.append({
+            "nom_fichier": nom_fichier,
+            "chemin": chemin,
+            "largeur": largeur,
+            "hauteur": hauteur,
+        })
+    return images_disponibles
+
+
+def calculer_y_image(hauteur_image, nom_fichier):
+    """Calcule la position verticale (haut de l'image), selon la règle
+    de la zone basse de l'encadré, sauf exception '-en-bas' sans espacement."""
+    if nom_fichier.endswith(f"{SUFFIXE_SANS_ESPACE_VERTICAL}.png"):
+        espacement_vertical = 0
+    else:
+        marge_max = max(0, HAUTEUR_ZONE_BASSE - hauteur_image)
+        espacement_vertical = random.randint(0, marge_max)
+
+    y_bas_image = Y_BAS_ENCADRE - espacement_vertical
+    y_haut_image = y_bas_image - hauteur_image
+    return y_haut_image
+
+
+def choisir_emplacements_illustrations(images_disponibles):
+    """Construit la liste des illustrations à intégrer, de gauche à droite,
+    en tirant à chaque étape une image qui rentre dans l'espace restant."""
+    x_courant = X_GAUCHE_ENCADRE
+    espace_restant = LARGEUR_ENCADRE
+    emplacements = []
+
+    while True:
+        # espace_restant == LARGEUR_ENCADRE uniquement à la toute première itération
+        if espace_restant == LARGEUR_ENCADRE:
+            espacement = random.randint(ESPACEMENT_H_PREMIERE_MIN, ESPACEMENT_H_PREMIERE_MAX)
+        else:
+            espacement = random.randint(ESPACEMENT_H_MIN, ESPACEMENT_H_MAX)
+
+        espace_restant -= espacement
+        x_courant += espacement
+
+        candidats = [img for img in images_disponibles if img["largeur"] <= espace_restant]
+        if not candidats:
+            break
+
+        image_choisie = random.choice(candidats)
+        y_haut = calculer_y_image(image_choisie["hauteur"], image_choisie["nom_fichier"])
+
+        emplacements.append({
+            "chemin": image_choisie["chemin"],
+            "x": x_courant,
+            "y": y_haut,
+        })
+
+        x_courant += image_choisie["largeur"]
+        espace_restant -= image_choisie["largeur"]
+
+    return emplacements
+
+
+def integrer_illustrations(image):
+    """Colle les illustrations choisies sur l'image de fond, avant le texte."""
+    images_disponibles = lister_images_disponibles()
+    emplacements = choisir_emplacements_illustrations(images_disponibles)
+
+    for emplacement in emplacements:
+        illustration = Image.open(emplacement["chemin"]).convert("RGBA")
+        image.alpha_composite(illustration, (emplacement["x"], emplacement["y"]))
+
+    return image
+
+
+# ============================================================
+# 6. FONCTIONS DE GÉNÉRATION DE L'IMAGE (texte)
 # ============================================================
 
 def decouper_selon_largeur(draw, texte, police, largeur_max):
@@ -133,18 +233,19 @@ def decouper_selon_largeur(draw, texte, police, largeur_max):
 
 
 def calculer_taille_police_phrase2(texte):
-    """Réduit la taille de police si le texte est long, l'augmente s'il est court.
-    Formule linéaire simple, bornée entre TAILLE_PHRASE2_MIN et TAILLE_PHRASE2_MAX."""
+    """Réduit la taille de police si le texte est long, l'augmente s'il est court."""
     taille = TAILLE_PHRASE2_BASE - len(texte) * TAILLE_PHRASE2_COEF_REDUCTION
     return max(TAILLE_PHRASE2_MIN, min(TAILLE_PHRASE2_MAX, taille))
 
 
 def generer_image(premiere_ligne, deuxieme_ligne):
-    """Génère l'image façon 'couverture d'hebdo' avec le texte incrusté.
-    Cette fonction ne publie rien : elle sauvegarde juste un fichier .jpg en local."""
+    """Génère l'image façon 'couverture d'hebdo' : fond + illustrations + texte."""
     image = Image.open(FICHIER_IMAGE_FOND).convert("RGBA")
-    largeur, hauteur = image.size
 
+    # Illustrations d'abord, avant le texte
+    image = integrer_illustrations(image)
+
+    largeur, hauteur = image.size
     x_gauche = MARGE_GAUCHE
     largeur_utile = largeur - MARGE_GAUCHE - MARGE_DROITE
     largeur_utile_premiere = largeur_utile * RATIO_LARGEUR_PHRASE1
@@ -161,7 +262,6 @@ def generer_image(premiere_ligne, deuxieme_ligne):
         draw.text((x + DECALAGE_OMBRE[0], y + DECALAGE_OMBRE[1]), texte, font=police, fill=COULEUR_OMBRE)
         draw.text((x, y), texte, font=police, fill=couleur)
 
-    # --- Phrase 1 : alignée à gauche ---
     lignes_premiere = decouper_selon_largeur(draw, premiere_ligne, police_premiere, largeur_utile_premiere)
     for ligne in lignes_premiere:
         dessiner_avec_ombre(x_gauche, y, ligne, police_premiere, COULEUR_PHRASE1)
@@ -169,7 +269,6 @@ def generer_image(premiere_ligne, deuxieme_ligne):
 
     y += ESPACE_ENTRE_PHRASES
 
-    # --- Phrase 2 : centrée ---
     lignes_deuxieme = decouper_selon_largeur(draw, deuxieme_ligne, police_deuxieme, largeur_utile)
     for ligne in lignes_deuxieme:
         largeur_ligne = draw.textlength(ligne, font=police_deuxieme)
@@ -183,7 +282,7 @@ def generer_image(premiere_ligne, deuxieme_ligne):
 
 
 # ============================================================
-# 6. CONSTRUCTION DU TEXTE DU POST
+# 7. CONSTRUCTION DU TEXTE DU POST
 # ============================================================
 obs1, obs2, obs3 = tirer_obsessions(donnees)
 premiere_ligne = f"{obs1}, {obs2}, {obs3}"
@@ -195,13 +294,13 @@ print(texte_du_post)
 
 
 # ============================================================
-# 7. GÉNÉRATION DE L'IMAGE
+# 8. GÉNÉRATION DE L'IMAGE
 # ============================================================
 chemin_image = generer_image(premiere_ligne, deuxieme_ligne)
 
 
 # ============================================================
-# 8. PUBLICATION SUR BLUESKY (texte + image ensemble)
+# 9. PUBLICATION SUR BLUESKY
 # ============================================================
 HANDLE = os.environ.get("BSKY_HANDLE")
 PASSWORD = os.environ.get("BSKY_PASSWORD")
