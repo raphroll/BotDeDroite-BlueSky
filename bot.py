@@ -68,7 +68,7 @@ ESPACEMENT_H_PREMIERE_MIN = 0
 ESPACEMENT_H_PREMIERE_MAX = 60
 ESPACEMENT_H_MIN = -20
 ESPACEMENT_H_MAX = 100
-SUFFIXE_SANS_ESPACE_VERTICAL = "-en-bas"
+SUFFIXE_SANS_ESPACE_VERTICAL = "_en-bas"
 
 
 # ============================================================
