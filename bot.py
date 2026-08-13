@@ -58,17 +58,16 @@ DECALAGE_OMBRE = (4, 4)
 
 # --- Géométrie de l'encadré noir (mesurée sur l'image de fond) ---
 X_GAUCHE_ENCADRE = 200
-LARGEUR_ENCADRE = 806
+LARGEUR_ENCADRE = 807
 Y_BAS_ENCADRE = 1131
 
 # --- Illustrations dans l'encadré ---
 DOSSIER_IMAGES = "images"
-HAUTEUR_ZONE_BASSE = 500  # zone en bas de l'encadré réservée aux illustrations
-ESPACEMENT_H_PREMIERE_MIN = 0
-ESPACEMENT_H_PREMIERE_MAX = 60
-ESPACEMENT_H_MIN = -20
-ESPACEMENT_H_MAX = 100
+HAUTEUR_ZONE_BASSE = 500
 SUFFIXE_SANS_ESPACE_VERTICAL = "_en-bas"
+MARQUEUR_SUPERPOSE = "_superpose"
+ESPACEMENT_H_MAX = 100
+ESPACEMENT_H_MIN_SUPERPOSE = -100
 
 
 # ============================================================
@@ -150,7 +149,7 @@ def lister_images_disponibles():
 
 def calculer_y_image(hauteur_image, nom_fichier):
     """Calcule la position verticale (haut de l'image), selon la règle
-    de la zone basse de l'encadré, sauf exception '-en-bas' sans espacement."""
+    de la zone basse de l'encadré, sauf exception '_en-bas' sans espacement."""
     if nom_fichier.endswith(f"{SUFFIXE_SANS_ESPACE_VERTICAL}.png"):
         espacement_vertical = 0
     else:
@@ -162,28 +161,35 @@ def calculer_y_image(hauteur_image, nom_fichier):
     return y_haut_image
 
 
+def determiner_espacement_min(nom_fichier, est_premiere):
+    """L'espacement minimal est -100 uniquement si l'image autorise la
+    superposition ET qu'elle n'est pas la première (rien à superposer avant elle)."""
+    if not est_premiere and MARQUEUR_SUPERPOSE in nom_fichier:
+        return ESPACEMENT_H_MIN_SUPERPOSE
+    return 0
+
+
 def choisir_emplacements_illustrations(images_disponibles):
-    """Construit la liste des illustrations à intégrer, de gauche à droite,
-    en tirant à chaque étape une image qui rentre dans l'espace restant."""
+    """Construit la liste des illustrations à intégrer, de gauche à droite.
+    Pour chaque étape : on choisit d'abord une image qui tient dans l'espace
+    restant, puis on tire l'espacement à sa gauche selon l'espace qu'il reste."""
     x_courant = X_GAUCHE_ENCADRE
     espace_restant = LARGEUR_ENCADRE
     emplacements = []
+    est_premiere = True
 
     while True:
-        # espace_restant == LARGEUR_ENCADRE uniquement à la toute première itération
-        if espace_restant == LARGEUR_ENCADRE:
-            espacement = random.randint(ESPACEMENT_H_PREMIERE_MIN, ESPACEMENT_H_PREMIERE_MAX)
-        else:
-            espacement = random.randint(ESPACEMENT_H_MIN, ESPACEMENT_H_MAX)
-
-        espace_restant -= espacement
-        x_courant += espacement
-
         candidats = [img for img in images_disponibles if img["largeur"] <= espace_restant]
         if not candidats:
             break
 
         image_choisie = random.choice(candidats)
+
+        espacement_min = determiner_espacement_min(image_choisie["nom_fichier"], est_premiere)
+        espacement_max = min(ESPACEMENT_H_MAX, espace_restant - image_choisie["largeur"])
+        espacement = random.randint(espacement_min, espacement_max)
+
+        x_courant += espacement
         y_haut = calculer_y_image(image_choisie["hauteur"], image_choisie["nom_fichier"])
 
         emplacements.append({
@@ -193,7 +199,8 @@ def choisir_emplacements_illustrations(images_disponibles):
         })
 
         x_courant += image_choisie["largeur"]
-        espace_restant -= image_choisie["largeur"]
+        espace_restant -= (espacement + image_choisie["largeur"])
+        est_premiere = False
 
     return emplacements
 
@@ -242,7 +249,6 @@ def generer_image(premiere_ligne, deuxieme_ligne):
     """Génère l'image façon 'couverture d'hebdo' : fond + illustrations + texte."""
     image = Image.open(FICHIER_IMAGE_FOND).convert("RGBA")
 
-    # Illustrations d'abord, avant le texte
     image = integrer_illustrations(image)
 
     largeur, hauteur = image.size
@@ -287,7 +293,7 @@ def generer_image(premiere_ligne, deuxieme_ligne):
 obs1, obs2, obs3 = tirer_obsessions(donnees)
 premiere_ligne = f"{obs1}, {obs2}, {obs3}"
 deuxieme_ligne = construire_deuxieme_ligne(donnees)
-texte_du_post = f"{premiere_ligne}\n{deuxieme_ligne}"
+texte_du_post = f"A la une aujourd'hui : {premiere_ligne}\n{deuxieme_ligne}"
 
 print("Message généré :")
 print(texte_du_post)
