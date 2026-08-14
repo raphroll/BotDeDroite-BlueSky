@@ -293,7 +293,7 @@ def generer_image(premiere_ligne, deuxieme_ligne):
 obs1, obs2, obs3 = tirer_obsessions(donnees)
 premiere_ligne = f"{obs1}, {obs2}, {obs3}"
 deuxieme_ligne = construire_deuxieme_ligne(donnees)
-texte_du_post = f"A la une aujourd'hui : {premiere_ligne}...\n{deuxieme_ligne}"
+texte_du_post = f"À LA UNE AUJOURD'HUI : {premiere_ligne}...\n\n{deuxieme_ligne}"
 
 print("Message généré :")
 print(texte_du_post)
