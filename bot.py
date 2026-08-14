@@ -28,10 +28,10 @@ PROBA_ADJ = 0.75
 FICHIER_IMAGE_FOND = "une-vierge2.png"
 
 # --- Marges du texte (zone autorisée sur l'image) ---
-MARGE_GAUCHE = 250
-MARGE_DROITE = 250
+MARGE_GAUCHE = 240
+MARGE_DROITE = 240
 MARGE_HAUT = 360
-MARGE_BAS = 130
+MARGE_BAS = 110
 
 # --- Phrase 1 (les 3 obsessions), en haut, alignée à gauche ---
 FICHIER_POLICE_PHRASE1 = "Oswald-Regular.ttf"
@@ -58,16 +58,16 @@ DECALAGE_OMBRE = (4, 4)
 
 # --- Géométrie de l'encadré noir (mesurée sur l'image de fond) ---
 X_GAUCHE_ENCADRE = 200
-LARGEUR_ENCADRE = 807
+LARGEUR_ENCADRE = 806
 Y_BAS_ENCADRE = 1131
 
 # --- Illustrations dans l'encadré ---
 DOSSIER_IMAGES = "images"
-HAUTEUR_ZONE_BASSE = 500
-SUFFIXE_SANS_ESPACE_VERTICAL = "_en-bas"
+HAUTEUR_ZONE_BASSE = 400
+MARQUEUR_SANS_ESPACE_VERTICAL = "_en-bas"
 MARQUEUR_SUPERPOSE = "_superpose"
-ESPACEMENT_H_MAX = 100
-ESPACEMENT_H_MIN_SUPERPOSE = -100
+ESPACEMENT_HORIZ_MAX = 70
+ESPACEMENT_HORIZ_MIN_SUPERPOSE = -120
 
 
 # ============================================================
@@ -75,7 +75,7 @@ ESPACEMENT_H_MIN_SUPERPOSE = -100
 # ============================================================
 
 def tirer_obsessions(donnees):
-    """Tire obs1, obs2, obs3 selon les règles composé / nom."""
+    """Tire obs1, obs2, obs3 selon les proba d'obsession composée ou nominative."""
     obs1_est_compo = random.random() < PROBA_OBS_COMPO
     obs3_est_nom = random.random() < PROBA_OBS_NOM
 
@@ -97,7 +97,7 @@ def tirer_obsessions(donnees):
 
 
 def construire_deuxieme_ligne(donnees):
-    """Construit la 2e ligne de la phrase, selon sujet normal ou néo."""
+    """Construit la 2e ligne de la phrase, selon les proba de sujet normal ou néologisme."""
     sujet_est_neo = random.random() < PROBA_SUJET_NEO
 
     if sujet_est_neo:
@@ -124,7 +124,7 @@ def construire_deuxieme_ligne(donnees):
 
 
 # ============================================================
-# 5. FONCTIONS D'ILLUSTRATION (images dans l'encadré)
+# 5. FONCTIONS D'INTÉGRATION DES IMAGES DANS L'ENCADRÉ
 # ============================================================
 
 def lister_images_disponibles():
@@ -148,9 +148,9 @@ def lister_images_disponibles():
 
 
 def calculer_y_image(hauteur_image, nom_fichier):
-    """Calcule la position verticale (haut de l'image), selon la règle
-    de la zone basse de l'encadré, sauf exception '_en-bas' sans espacement."""
-    if nom_fichier.endswith(f"{SUFFIXE_SANS_ESPACE_VERTICAL}.png"):
+    """Calcule la position verticale de l'image selon la règle de la 
+    zone basse de l'encadré, sauf exception '_en-bas' (sans espacement)."""
+    if MARQUEUR_SANS_ESPACE_VERTICAL in nom_fichier:
         espacement_vertical = 0
     else:
         marge_max = max(0, HAUTEUR_ZONE_BASSE - hauteur_image)
@@ -162,14 +162,14 @@ def calculer_y_image(hauteur_image, nom_fichier):
 
 
 def determiner_espacement_min(nom_fichier, est_premiere):
-    """L'espacement minimal est -100 uniquement si l'image autorise la
+    """L'espacement minimal peut être négatif uniquement si l'image autorise la
     superposition ET qu'elle n'est pas la première (rien à superposer avant elle)."""
     if not est_premiere and MARQUEUR_SUPERPOSE in nom_fichier:
-        return ESPACEMENT_H_MIN_SUPERPOSE
+        return ESPACEMENT_HORIZ_MIN_SUPERPOSE
     return 0
 
 
-def choisir_emplacements_illustrations(images_disponibles):
+def choisir_emplacements_images(images_disponibles):
     """Construit la liste des illustrations à intégrer, de gauche à droite.
     Pour chaque étape : on choisit d'abord une image qui tient dans l'espace
     restant, puis on tire l'espacement à sa gauche selon l'espace qu'il reste."""
@@ -186,7 +186,7 @@ def choisir_emplacements_illustrations(images_disponibles):
         image_choisie = random.choice(candidats)
 
         espacement_min = determiner_espacement_min(image_choisie["nom_fichier"], est_premiere)
-        espacement_max = min(ESPACEMENT_H_MAX, espace_restant - image_choisie["largeur"])
+        espacement_max = min(ESPACEMENT_HORIZ_MAX, espace_restant - image_choisie["largeur"])
         espacement = random.randint(espacement_min, espacement_max)
 
         x_courant += espacement
@@ -208,7 +208,7 @@ def choisir_emplacements_illustrations(images_disponibles):
 def integrer_illustrations(image):
     """Colle les illustrations choisies sur l'image de fond, avant le texte."""
     images_disponibles = lister_images_disponibles()
-    emplacements = choisir_emplacements_illustrations(images_disponibles)
+    emplacements = choisir_emplacements_images(images_disponibles)
 
     for emplacement in emplacements:
         illustration = Image.open(emplacement["chemin"]).convert("RGBA")
@@ -218,7 +218,7 @@ def integrer_illustrations(image):
 
 
 # ============================================================
-# 6. FONCTIONS DE GÉNÉRATION DE L'IMAGE (texte)
+# 6. FONCTIONS D'INTÉGRATION DU TEXTE DANS L'IMAGE
 # ============================================================
 
 def decouper_selon_largeur(draw, texte, police, largeur_max):
@@ -240,13 +240,13 @@ def decouper_selon_largeur(draw, texte, police, largeur_max):
 
 
 def calculer_taille_police_phrase2(texte):
-    """Réduit la taille de police si le texte est long, l'augmente s'il est court."""
+    """Réduit la taille de police si le texte est long."""
     taille = TAILLE_PHRASE2_BASE - len(texte) * TAILLE_PHRASE2_COEF_REDUCTION
     return max(TAILLE_PHRASE2_MIN, min(TAILLE_PHRASE2_MAX, taille))
 
 
 def generer_image(premiere_ligne, deuxieme_ligne):
-    """Génère l'image façon 'couverture d'hebdo' : fond + illustrations + texte."""
+    """Génère l'image façon couverture d'hebdo : fond + illustrations + texte."""
     image = Image.open(FICHIER_IMAGE_FOND).convert("RGBA")
 
     image = integrer_illustrations(image)
