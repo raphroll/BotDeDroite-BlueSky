@@ -3,6 +3,7 @@ import json
 import random
 from atproto import Client
 from PIL import Image, ImageDraw, ImageFont
+from mastodon import Mastodon
 
 # ============================================================
 # 1. CHARGEMENT DES DONNÉES
@@ -306,7 +307,7 @@ chemin_image = generer_image(premiere_ligne, deuxieme_ligne)
 
 
 # ============================================================
-# 9. PUBLICATION SUR BLUESKY
+# 9. PUBLICATION SUR BLUESKY ET MASTODON
 # ============================================================
 HANDLE = os.environ.get("BSKY_HANDLE")
 PASSWORD = os.environ.get("BSKY_PASSWORD")
@@ -323,4 +324,15 @@ client.send_image(
     image_alt=texte_du_post
 )
 
-print("Post (texte + image) publié avec succès !")
+print("Post (texte + image) publié avec succès sur Bluesky !")
+
+# --- Mastodon ---
+MASTODON_URL = os.environ.get("MASTODON_URL")
+MASTODON_TOKEN = os.environ.get("MASTODON_TOKEN")
+
+mastodon = Mastodon(access_token=MASTODON_TOKEN, api_base_url=MASTODON_URL)
+
+media = mastodon.media_post(chemin_image, mime_type="image/jpeg")
+mastodon.status_post(texte_du_post, media_ids=[media["id"]])
+
+print("Post publié avec succès sur Mastodon !")
